@@ -56,13 +56,7 @@ void QueueAdd(PriorityQueue* q, const void* data)
 
     // Percolate up
     int hole = ++(q->size);
-    q->data[0] = (void*)data;
-
-    for(; q->cmp((void*)data, q->data[hole/2]) < 0; hole /= 2)
-    {
-        q->data[hole] = q->data[hole / 2];
-    }
-    q->data[hole] = (void*)data;
+    PercolateUp(q, hole, data);
 }
 
 void* QueueRemove(PriorityQueue* q)
@@ -94,13 +88,14 @@ void PercolateDown(PriorityQueue* q, int hole)
     {
         child = hole * 2;
         if(child != q->size &&
-           q->cmp(q->data[ child + 1 ], q->data[ child ] ) < 0)
+           q->cmp(q->data[child + 1], q->data[child] ) < 0)
         {
            child++;
         }
-        if(q->cmp( q->data[ child ], tmp ) < 0 )
+        if(q->cmp(q->data[child], tmp) < 0)
         {
-            q->data[ hole ] = q->data[ child ];
+            //q->data[hole] = q->data[child];
+            SwapElements(q, hole, child);
         }
         else
             break;
@@ -108,36 +103,23 @@ void PercolateDown(PriorityQueue* q, int hole)
     q->data[hole] = tmp;
 }
 
-void Heapify(PriorityQueue* q, int i)
+void PercolateUp(PriorityQueue* q, int hole, const void* data)
 {
-    int l = LEFT(i);
-    int r = RIGHT(i);
-    int minimum;
+    q->data[0] = (void*)data;
 
-    //if(l < q->size && q->data[l] < q->data[i])
-    if(l < q->size && q->cmp(q->data[l], q->data[i]) < 0)
+    for(; q->cmp((void*)data, q->data[hole/2]) < 0; hole /= 2)
     {
-        minimum = l;
+        //q->data[hole] = q->data[hole / 2];
+        SwapElements(q, hole, hole/2);
     }
-    else
-    {
-        minimum = i;
-    }
+    q->data[hole] = (void*)data;
+}
 
-    //if(r < q->size && q->data[r] < q->data[minimum])
-    if(r < q->size && q->cmp(q->data[r], q->data[minimum]) < 0)
-    {
-        minimum = r;
-    }
-
-    if(minimum != i)
-    {
-        void* temp = q->data[i];
-        q->data[i] = q->data[minimum];
-        q->data[minimum] = temp;
-
-        Heapify(q, minimum);
-    }
+void SwapElements(PriorityQueue* q, int first, int second)
+{
+    void* temp = q->data[first];
+    q->data[first] = q->data[second];
+    q->data[second] = temp;
 }
 
 int QueueSearch(PriorityQueue* q, const void* data)

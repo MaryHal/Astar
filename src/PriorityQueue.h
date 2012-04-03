@@ -22,11 +22,9 @@ void QueueAdd(PriorityQueue* q, const void* data);
 void* QueueRemove(PriorityQueue* q);
 
 void PercolateDown(PriorityQueue* q, int hole);
-void PercolateUp(PriorityQueue* q, int hole);
-void Heapify(PriorityQueue* q, int i);
+void PercolateUp(PriorityQueue* q, int hole, const void* data);
 
-
-
+void SwapElements(PriorityQueue* q, int first, int second);
 int QueueSearch(PriorityQueue* q, const void* data);
 
 #endif

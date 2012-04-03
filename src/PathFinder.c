@@ -169,7 +169,7 @@ void AddOpen(PathFinder* pf, int x, int y, Node* parent)
             pf->nodeMap[x][y].f = ComputeF(pf, x, y);
 
             int index = QueueSearch(pf->openList, &pf->nodeMap[x][y]);
-            Heapify(pf->openList, index);
+            PercolateUp(pf->openList, index, &pf->nodeMap[x][y]);
         }
     }
 }
@@ -194,16 +194,14 @@ int ComputeG(PathFinder* pf, int x, int y, Node* parent)
 
 int ComputeH(PathFinder* pf, int x, int y)
 {
-    return 10 * (abs(x - pf->endx) + abs(pf->endy - y)); // Manhatten method
+    //return 10 * (abs(x - pf->endx) + abs(pf->endy - y)); // Manhatten method
 
-    /*
     int xDistance = abs(x-pf->endx);
     int yDistance = abs(y-pf->endy);
     if (xDistance > yDistance)
         return 14*yDistance + 10*(xDistance-yDistance);
     else
         return 14*xDistance + 10*(yDistance-xDistance);
-    */
 }
 
 int ComputeF(PathFinder* pf, int x, int y)

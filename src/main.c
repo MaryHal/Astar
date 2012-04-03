@@ -8,29 +8,35 @@
 #include "Map.h"
 #include "PathFinder.h"
 
-/*
+#if 0
 int minCompare(const void* a, const void* b)
 {
     return *(int*)a - *(int*)b;
 }
-*/
 
 int main(int argc, const char *argv[])
 {
-    /*
     PriorityQueue* q = CreateQueue(minCompare, 10);
-    int array[9];
-    for (int i = 9; i > 0; i--)
+    int array[10];
+    array[9] = 20;
+    QueueAdd(q, &array[9]);
+    for (int i = 8; i >= 0; i--)
     {
         array[i] = i;
         QueueAdd(q, &array[i]);
     }
-    printf("\n");
+    array[9] = -1;
+    int index = QueueSearch(q, &array[9]);
+    PercolateUp(q, index, &array[9]);
     while (GetQueueSize(q) > 0)
         printf("%d ", *(int*)QueueRemove(q));
     DeleteQueue(q);
-    */
+    return 0;
+}
+#endif
 
+int main(int argc, const char *argv[])
+{
     Application app = { "A* Test", 640, 480, false, false };
     InitApp(&app);
 
@@ -82,7 +88,6 @@ int main(int argc, const char *argv[])
     DeinitPathFinder(&pathFinder);
     DeinitMap(&map);
     DeinitApp();
-
     return 0;
 }
 
