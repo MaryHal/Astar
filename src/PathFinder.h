@@ -12,6 +12,7 @@ typedef struct PathNode
 {
     int x;
     int y;
+    struct PathNode* parent;
 } PathNode;
 
 typedef struct Node
@@ -35,7 +36,7 @@ typedef struct
     Node** nodeMap;
 
     PathNode* path;
-    int pathSize;
+    //int pathSize;
 } PathFinder;
 
 void InitPathFinder(PathFinder* pathFinder, Map* map);
@@ -44,6 +45,9 @@ void DeinitPathFinder(PathFinder* pathFinder);
 void SetOrigin(PathFinder* pf, int x, int y);
 void SetDestination(PathFinder* pf, int x, int y);
 void FindPath(PathFinder* pf);
+
+void DeletePath(PathFinder* pf);
+void SavePath(PathFinder* pf, Node* n);
 
 void AddOpen(PathFinder* pf, int x, int y, Node* parent);
 int ComputeG(PathFinder* pf, int x, int y, Node* parent);

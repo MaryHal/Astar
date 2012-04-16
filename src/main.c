@@ -22,14 +22,23 @@ int main(int argc, const char *argv[])
     QueueAdd(q, &array[9]);
     for (int i = 8; i >= 0; i--)
     {
-        array[i] = i;
+        array[i] = i * 2;
         QueueAdd(q, &array[i]);
+    }
+    for (int i = 0; i < 9; i++)
+    {
+        array[i] /= 2;
+        int index = QueueSearch(q, &array[i]);
+        PercolateUp(q, index, &array[i]);
     }
     array[9] = -1;
     int index = QueueSearch(q, &array[9]);
     PercolateUp(q, index, &array[9]);
+    printf("\n%lu\n", (unsigned long)GetQueueSize(q));
     while (GetQueueSize(q) > 0)
         printf("%d ", *(int*)QueueRemove(q));
+
+    printf("\n%lu\n", (unsigned long)GetQueueSize(q));
     DeleteQueue(q);
     return 0;
 }
@@ -41,7 +50,7 @@ int main(int argc, const char *argv[])
     InitApp(&app);
 
     Map map;
-    InitMap(&map, &app, 16, 16);
+    InitMap(&map, &app, 40, 40);
 
     PathFinder pathFinder;
     InitPathFinder(&pathFinder, &map);
@@ -53,22 +62,28 @@ int main(int argc, const char *argv[])
 
         int x;
         int y;
+        glfwGetMousePos(&x, &y);
         if (glfwGetMouseButton(GLFW_MOUSE_BUTTON_LEFT))
         {
-            glfwGetMousePos(&x, &y);
-            SetTile(&map, x / map.tilewidth, y / map.tileheight, Wall);
+            if (glfwGetKey(GLFW_KEY_LCTRL))
+                SetTile(&map, x / map.tilewidth, y / map.tileheight, None);
+            else
+                SetTile(&map, x / map.tilewidth, y / map.tileheight, Wall);
         }
 
-        glfwGetMousePos(&x, &y);
-        SetDestination(&pathFinder, x / map.tilewidth, y / map.tileheight);
-        FindPath(&pathFinder);
+        if (x/map.tilewidth  != pathFinder.endx ||
+            y/map.tileheight != pathFinder.endy)
+        { 
+            SetDestination(&pathFinder, x / map.tilewidth, y / map.tileheight);
+            FindPath(&pathFinder);
+        }
 
         DrawMap(&map);
         DrawPath(&pathFinder);
 
-        glfwGetMousePos(&x, &y);
+        //glfwGetMousePos(&x, &y);
         x -= x % map.tilewidth;
-        y -= y % map.tileheight;;
+        y -= y % map.tileheight;
         glColor4f(0.0f, 0.0f, 1.0f, 0.5f);
         glBegin(GL_QUADS);
             glVertex2f(x, y);

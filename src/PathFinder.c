@@ -36,8 +36,9 @@ void InitPathFinder(PathFinder* pathFinder, Map* map)
         }
     }
 
-    pathFinder->path = malloc(sizeof(PathNode) * map->height * map->width);
-    pathFinder->pathSize = 0;
+    //pathFinder->path = malloc(sizeof(PathNode) * map->height * map->width);
+    //pathFinder->pathSize = 0;
+    pathFinder->path = NULL;
 }
 
 void DeinitPathFinder(PathFinder* pathFinder)
@@ -47,17 +48,21 @@ void DeinitPathFinder(PathFinder* pathFinder)
         free(pathFinder->nodeMap[i]);
     free(pathFinder->nodeMap);
 
-    free(pathFinder->path);
+    DeletePath(pathFinder);
 }
 
 void SetOrigin(PathFinder* pf, int x, int y)
 {
+    if (!IsValidTile(pf->map, x, y))
+        return;
     pf->startx = x;
     pf->starty = y;
 }
 
 void SetDestination(PathFinder* pf, int x, int y)
 {
+    if (!IsValidTile(pf->map, x, y))
+        return;
     pf->endx = x;
     pf->endy = y;
 }
@@ -89,46 +94,95 @@ void FindPath(PathFinder* pf)
     // If there's nothing in the open list anymore or we arrive at the destination, stop
     while (GetQueueSize(pf->openList) > 0)
     {
+        //printf("%d ", GetQueueSize(pf->openList));
         // a) Look for the lowest F cost square on the open list.
         Node* current = (Node*)QueueRemove(pf->openList);
-
-        // b) Switch it to the closed list. 
-        pf->nodeMap[x][y].open = OnClosedList;
 
         x = current->x;
         y = current->y;
 
+        // b) Switch it to the closed list. 
+        current->open = OnClosedList;
+
         // c) For each of the 8 squares adjacent to this current square, attempt to add it
         //    to the open list.
         // AddOpen checks for adjacent-validity and whether the node is a wall or not.
-        AddOpen(pf, x - 1, y - 1, current);
         AddOpen(pf, x - 0, y - 1, current);
-        AddOpen(pf, x + 1, y - 1, current);
+        AddOpen(pf, x - 0, y + 1, current);
         AddOpen(pf, x - 1, y - 0, current);
         AddOpen(pf, x + 1, y - 0, current);
+
+        /*
+        AddOpen(pf, x - 1, y - 1, current);
+        AddOpen(pf, x + 1, y - 1, current);
         AddOpen(pf, x - 1, y + 1, current);
-        AddOpen(pf, x - 0, y + 1, current);
         AddOpen(pf, x + 1, y + 1, current);
+        */
 
         // Are we done?
-        if (pf->nodeMap[pf->endx][pf->endy].open == OnOpenList)
+        if (x == pf->endx && y == pf->endy &&
+            pf->nodeMap[pf->endx][pf->endy].open == OnClosedList)
         {
             // Step 3: Save Path
-            int i = 0;
-            while (current)
-            {
-                pf->path[i].x = current->x;
-                pf->path[i].y = current->y;
-                i++;
+            DeletePath(pf);
+            SavePath(pf, current);
 
-                current = current->parent;
+            /*
+            PathNode* p = pf->path;
+            if (p == NULL)
+                printf(" WHAT?!?!?!?!?!");
+            while (p)
+            {
+                printf("(%p) %d, %d", p, p->x, p->y);
+                p = p->parent;
             }
-            pf->pathSize = i;
-            printf("%d ", i);
+            */
             break;
         }
     }
     printf("Pathfinding done\n");
+}
+
+void DeletePath(PathFinder* pf)
+{
+    while (pf->path)
+    {
+        free(pf->path);
+        pf->path = pf->path->parent;
+    }
+    pf->path = NULL;
+}
+
+void SavePath(PathFinder* pf, Node* n)
+{
+    pf->path = malloc(sizeof(PathNode));
+    pf->path->x = n->x;
+    pf->path->y = n->y;
+    pf->path->parent = NULL;
+
+    PathNode* p = pf->path;
+    n = n->parent;
+    while (n)
+    {
+        p->parent = malloc(sizeof(PathNode));
+        p = p->parent;
+        p->x = n->x;
+        p->y = n->y;
+        p->parent = NULL;
+
+        // printf("(%p) %d, %d\n", p, p->x, p->y);
+
+        n = n->parent;
+    }
+    /* Bad Debugging
+    printf("====================\n");
+    p = pf->path;
+    while (p)
+    {
+        printf("(%p) %d, %d (%p)\n", p, p->x, p->y, p->parent);
+        p = p->parent;
+    }
+    */
 }
 
 void AddOpen(PathFinder* pf, int x, int y, Node* parent)
@@ -148,14 +202,14 @@ void AddOpen(PathFinder* pf, int x, int y, Node* parent)
 
     if (pf->nodeMap[x][y].open == NoList)
     {
-        pf->nodeMap[x][y].open = OnOpenList;
-        QueueAdd(pf->openList, &pf->nodeMap[x][y]);
-
         pf->nodeMap[x][y].parent = parent;
 
         pf->nodeMap[x][y].g = ComputeG(pf, x, y, parent);
         pf->nodeMap[x][y].h = ComputeH(pf, x, y);
         pf->nodeMap[x][y].f = ComputeF(pf, x, y);
+
+        pf->nodeMap[x][y].open = OnOpenList;
+        QueueAdd(pf->openList, &pf->nodeMap[x][y]);
     }
     else if (pf->nodeMap[x][y].open == OnOpenList)
     {
@@ -165,7 +219,9 @@ void AddOpen(PathFinder* pf, int x, int y, Node* parent)
         if (pf->nodeMap[x][y].g > g)
         {
             pf->nodeMap[x][y].parent = parent;
+
             pf->nodeMap[x][y].g = ComputeG(pf, x, y, parent);
+            pf->nodeMap[x][y].h = ComputeH(pf, x, y);
             pf->nodeMap[x][y].f = ComputeF(pf, x, y);
 
             int index = QueueSearch(pf->openList, &pf->nodeMap[x][y]);
@@ -182,8 +238,8 @@ int ComputeG(PathFinder* pf, int x, int y, Node* parent)
     }
     else
     {
-        int dx = abs(x - parent->x);
-        int dy = abs(y - parent->y);
+        int dx = abs(parent->x - x);
+        int dy = abs(parent->y - y);
 
         if (dx + dy > 1)
             return parent->g + 14;
@@ -194,7 +250,7 @@ int ComputeG(PathFinder* pf, int x, int y, Node* parent)
 
 int ComputeH(PathFinder* pf, int x, int y)
 {
-    //return 10 * (abs(x - pf->endx) + abs(pf->endy - y)); // Manhatten method
+    //return 10 * (abs(pf->endx - x) + abs(pf->endy - y)); // Manhatten method
 
     int xDistance = abs(x-pf->endx);
     int yDistance = abs(y-pf->endy);
@@ -218,20 +274,21 @@ void DrawPath(PathFinder* pf)
         return;
     }
 
-    for (int i = 0; i < pf->pathSize; ++i)
+    PathNode* current = pf->path;
+    while (current)
     {
-        int x = pf->path[i].x;
-        int y = pf->path[i].y;
+        int x = current->x * pf->map->tilewidth;
+        int y = current->y * pf->map->tileheight;
 
         glColor4f(0.0f, 1.0f, 0.0f, 0.5f);
-        int x2 = x * pf->map->tilewidth;
-        int y2 = y * pf->map->tileheight;
         glBegin(GL_QUADS);
-            glVertex2f(x2, y2);
-            glVertex2f(x2 + pf->map->tilewidth, y2);
-            glVertex2f(x2 + pf->map->tilewidth, y2 + pf->map->tileheight);
-            glVertex2f(x2, y2 + pf->map->tileheight);
+            glVertex2f(x, y);
+            glVertex2f(x + pf->map->tilewidth, y);
+            glVertex2f(x + pf->map->tilewidth, y + pf->map->tileheight);
+            glVertex2f(x, y + pf->map->tileheight);
         glEnd();
+
+        current = current->parent;
     }
 }
 
