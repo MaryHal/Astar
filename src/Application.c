@@ -2,7 +2,6 @@
 
 #include <stdio.h>
 
-#include <GL/glew.h>
 #include <GL/glfw.h>
 
 bool InitApp(Application* app)
@@ -29,7 +28,6 @@ bool InitApp(Application* app)
     glfwSetMouseButtonCallback(mouseInput);
     */
 
-    glewInit();
     InitOpenGL(app);
 
     app->running = true;

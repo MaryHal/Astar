@@ -157,6 +157,7 @@ OBJECTS := \
 	$(OBJDIR)/Application.o \
 	$(OBJDIR)/main.o \
 	$(OBJDIR)/Map.o \
+	$(OBJDIR)/Test.o \
 
 RESOURCES := \
 
@@ -230,6 +231,9 @@ $(OBJDIR)/main.o: src/main.c
 	@echo $(notdir $<)
 	$(SILENT) $(CC) $(CFLAGS) -o "$@" -c "$<"
 $(OBJDIR)/Map.o: src/Map.c
+	@echo $(notdir $<)
+	$(SILENT) $(CC) $(CFLAGS) -o "$@" -c "$<"
+$(OBJDIR)/Test.o: src/Test.c
 	@echo $(notdir $<)
 	$(SILENT) $(CC) $(CFLAGS) -o "$@" -c "$<"
 

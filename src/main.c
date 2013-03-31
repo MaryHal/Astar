@@ -1,48 +1,8 @@
-#include <stdio.h>
-
-#include <GL/glew.h>
 #include <GL/glfw.h>
 
-#include "PriorityQueue.h"
 #include "Application.h"
 #include "Map.h"
 #include "PathFinder.h"
-
-#if 0
-int minCompare(const void* a, const void* b)
-{
-    return *(int*)a - *(int*)b;
-}
-
-int main(int argc, const char *argv[])
-{
-    PriorityQueue* q = CreateQueue(minCompare, 10);
-    int array[10];
-    array[9] = 20;
-    QueueAdd(q, &array[9]);
-    for (int i = 8; i >= 0; i--)
-    {
-        array[i] = i * 2;
-        QueueAdd(q, &array[i]);
-    }
-    for (int i = 0; i < 9; i++)
-    {
-        array[i] /= 2;
-        int index = QueueSearch(q, &array[i]);
-        PercolateUp(q, index, &array[i]);
-    }
-    array[9] = -1;
-    int index = QueueSearch(q, &array[9]);
-    PercolateUp(q, index, &array[9]);
-    printf("\n%lu\n", (unsigned long)GetQueueSize(q));
-    while (GetQueueSize(q) > 0)
-        printf("%d ", *(int*)QueueRemove(q));
-
-    printf("\n%lu\n", (unsigned long)GetQueueSize(q));
-    DeleteQueue(q);
-    return 0;
-}
-#endif
 
 int main(int argc, const char *argv[])
 {
@@ -50,11 +10,15 @@ int main(int argc, const char *argv[])
     InitApp(&app);
 
     Map map;
-    InitMap(&map, &app, 40, 40);
+    InitMap(&map, &app, 20, 20);
 
     PathFinder pathFinder;
-    InitPathFinder(&pathFinder, &map);
+    InitPathFinder(&pathFinder, &map, false);
     SetOrigin(&pathFinder, 0, 0);
+
+    // Initial Path is to itself.
+    SetDestination(&pathFinder, 0, 0);
+    FindPath(&pathFinder);
 
     while (app.running)
     {
@@ -65,15 +29,15 @@ int main(int argc, const char *argv[])
         glfwGetMousePos(&x, &y);
         if (glfwGetMouseButton(GLFW_MOUSE_BUTTON_LEFT))
         {
+            // Allow the user to create/delete walls.
             if (glfwGetKey(GLFW_KEY_LCTRL))
                 SetTile(&map, x / map.tilewidth, y / map.tileheight, None);
             else
                 SetTile(&map, x / map.tilewidth, y / map.tileheight, Wall);
         }
-
         if (x/map.tilewidth  != pathFinder.endx ||
             y/map.tileheight != pathFinder.endy)
-        { 
+        {
             SetDestination(&pathFinder, x / map.tilewidth, y / map.tileheight);
             FindPath(&pathFinder);
         }
@@ -81,6 +45,7 @@ int main(int argc, const char *argv[])
         DrawMap(&map);
         DrawPath(&pathFinder);
 
+        // Draw mouse position
         //glfwGetMousePos(&x, &y);
         x -= x % map.tilewidth;
         y -= y % map.tileheight;
@@ -95,7 +60,6 @@ int main(int argc, const char *argv[])
         glfwSwapBuffers();
 
         app.running = !glfwGetKey(GLFW_KEY_ESC) && glfwGetWindowParam(GLFW_OPENED);
-        //glfwSleep(1.0 / 60.0 - fps.getFrameTime());
     }
 
     //DumpMap(&map);
@@ -105,4 +69,3 @@ int main(int argc, const char *argv[])
     DeinitApp();
     return 0;
 }
-

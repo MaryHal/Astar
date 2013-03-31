@@ -5,7 +5,6 @@
 #include <string.h>
 #include <math.h>
 
-#include <GL/glew.h>
 #include <GL/glfw.h>
 
 int nodeMinCompare(const void* a, const void* b)
@@ -13,12 +12,12 @@ int nodeMinCompare(const void* a, const void* b)
     return ((Node*)a)->f - ((Node*)b)->f;
 }
 
-void InitPathFinder(PathFinder* pathFinder, Map* map)
+void InitPathFinder(PathFinder* pathFinder, Map* map, bool diagonal)
 {
     pathFinder->map = map;
-
     pathFinder->openList = CreateQueue(nodeMinCompare, map->width * map->height);
 
+    // Clear our internal map
     pathFinder->nodeMap = malloc(sizeof(Node*) * map->width);
     for (int i = 0; i < map->width; ++i)
     {
@@ -28,7 +27,7 @@ void InitPathFinder(PathFinder* pathFinder, Map* map)
 
     for (int i = 0; i < map->width; i++)
     {
-        for (int e = 0; e < map->height; e++) 
+        for (int e = 0; e < map->height; e++)
         {
             pathFinder->nodeMap[i][e].x = i;
             pathFinder->nodeMap[i][e].y = e;
@@ -39,6 +38,7 @@ void InitPathFinder(PathFinder* pathFinder, Map* map)
     //pathFinder->path = malloc(sizeof(PathNode) * map->height * map->width);
     //pathFinder->pathSize = 0;
     pathFinder->path = NULL;
+    pathFinder->allowDiagonal = diagonal;
 }
 
 void DeinitPathFinder(PathFinder* pathFinder)
@@ -72,7 +72,7 @@ void FindPath(PathFinder* pf)
     //printf("(%d, %d) -> (%d, %d)\t", pf->startx, pf->starty, pf->endx, pf->endy);
     for (int i = 0; i < pf->map->width; i++)
     {
-        for (int e = 0; e < pf->map->height; e++) 
+        for (int e = 0; e < pf->map->height; e++)
         {
             pf->nodeMap[i][e].f = 0;
             pf->nodeMap[i][e].g = 0;
@@ -101,7 +101,7 @@ void FindPath(PathFinder* pf)
         x = current->x;
         y = current->y;
 
-        // b) Switch it to the closed list. 
+        // b) Switch it to the closed list.
         current->open = OnClosedList;
 
         // c) For each of the 8 squares adjacent to this current square, attempt to add it
@@ -112,12 +112,14 @@ void FindPath(PathFinder* pf)
         AddOpen(pf, x - 1, y - 0, current);
         AddOpen(pf, x + 1, y - 0, current);
 
-        /*
-        AddOpen(pf, x - 1, y - 1, current);
-        AddOpen(pf, x + 1, y - 1, current);
-        AddOpen(pf, x - 1, y + 1, current);
-        AddOpen(pf, x + 1, y + 1, current);
-        */
+        // Diagonal Check
+        if (pf->allowDiagonal)
+        {
+            AddOpen(pf, x - 1, y - 1, current);
+            AddOpen(pf, x + 1, y - 1, current);
+            AddOpen(pf, x - 1, y + 1, current);
+            AddOpen(pf, x + 1, y + 1, current);
+        }
 
         // Are we done?
         if (x == pf->endx && y == pf->endy &&
@@ -130,7 +132,7 @@ void FindPath(PathFinder* pf)
             /*
             PathNode* p = pf->path;
             if (p == NULL)
-                printf(" WHAT?!?!?!?!?!");
+                printf(" No Path?");
             while (p)
             {
                 printf("(%p) %d, %d", p, p->x, p->y);
@@ -270,7 +272,7 @@ void DrawPath(PathFinder* pf)
     // If FindPath was not successful, or hasn't been run yet.
     if (!pf->path)
     {
-        printf("No Path\n");
+        printf("No path to draw...\n");
         return;
     }
 
@@ -292,4 +294,7 @@ void DrawPath(PathFinder* pf)
     }
 }
 
-
+void toggleDiagonal(PathFinder* pf)
+{
+    pf->allowDiagonal = !pf->allowDiagonal;
+}

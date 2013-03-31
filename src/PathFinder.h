@@ -19,9 +19,9 @@ typedef struct Node
 {
     int x;
     int y;
-    int f;
-    int g;
-    int h;
+    int f; // Current Path Cost
+    int g; // Preview Path Cost
+    int h; // Heuristic
     int open;
     struct Node* parent;
 } Node;
@@ -37,9 +37,11 @@ typedef struct
 
     PathNode* path;
     //int pathSize;
+
+    bool allowDiagonal;
 } PathFinder;
 
-void InitPathFinder(PathFinder* pathFinder, Map* map);
+void InitPathFinder(PathFinder* pathFinder, Map* map, bool diagonal);
 void DeinitPathFinder(PathFinder* pathFinder);
 
 void SetOrigin(PathFinder* pf, int x, int y);
@@ -55,6 +57,8 @@ int ComputeH(PathFinder* pf, int x, int y);
 int ComputeF(PathFinder* pf, int x, int y);
 
 void DrawPath(PathFinder* pf);
+
+void toggleDiagonal(PathFinder* pf);
 
 #endif
 

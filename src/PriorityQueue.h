@@ -11,7 +11,7 @@ typedef struct
     void** data;
     int (*cmp)(const void* a, const void* b);
 } PriorityQueue;
- 
+
 typedef PriorityQueue BinHeap;
 
 PriorityQueue* CreateQueue(int (*cmp)(const void* a, const void* b), size_t capacity);
